@@ -5,7 +5,11 @@ int motor1pin1 = 2;
 int motor1pin2 = 3;
 int motor2pin1 = 4;
 int motor2pin2 = 5;
+int LEDPin = 8;
+int SensorPin = 9;
+int SensorPower = 7;
 
+int LEDToggle = 0;
 void setup()
 {
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK); // Start the receiver
@@ -17,14 +21,69 @@ void setup()
   pinMode(motor1pin2, OUTPUT);
   pinMode(motor2pin1, OUTPUT);
   pinMode(motor2pin2, OUTPUT);
+  // LETS SET UP THE MAGNET SENSOR
+  pinMode(SensorPower, OUTPUT);
+  pinMode(SensorPin, INPUT);
 
-
+  //THIS STORES WHETHER THE LED IS STILL ON
+  int LEDToggle = 0;
 
   //NOTE: the output is less than a volt, not nearly enough to power the motor alone
   
 } 
 
 void loop() {
+  digitalWrite(SensorPower, HIGH);
+  digitalWrite(8, LOW);
+  
+  if (digitalRead(SensorPin) == HIGH){
+    KO();
+  }
+
+  while(LEDToggle == 1){
+    if (IrReceiver.decode()) {
+    //Serial.println(IrReceiver.decodedIRData.decodedRawData, HEX); // Print "old" raw data
+    //IrReceiver.printIRResultShort(&Serial); // Print complete received data in one line
+    //IrReceiver.printIRSendUsage(&Serial);   // Print the statement required to send this data
+    //Serial.println(IrReceiver.decodedIRData.decodedRawData);
+
+    //We need to use a "long" as an integer is not big enough to hold the decoded key value 
+    unsigned long key = IrReceiver.decodedIRData.decodedRawData;
+    Serial.println(key);
+      switch(key){
+        case 3108437760://Go forward
+          Serial.println("Nope.");
+          break;
+          
+        case 3141861120://Go left
+          Serial.println("Nope.");
+          break;
+          
+        case 3208707840://STOP
+          Serial.println("Nope.");
+          break;
+          
+        case 3158572800://Go right
+          Serial.println("Nope.");
+          break;
+          
+        case 3927310080://Go back
+          Serial.println("Nope.");
+          break;
+        
+        case 3125149440://K.O CONDITION
+          Serial.println("Nope.");
+          break;
+        
+        case 3091726080://RESET CONDITION
+          Serial.println(key);
+          RESET();
+          break;
+      }
+      IrReceiver.resume(); // Enable receiving of the next value
+    }
+  }
+  
   if (IrReceiver.decode()) {
     //Serial.println(IrReceiver.decodedIRData.decodedRawData, HEX); // Print "old" raw data
     //IrReceiver.printIRResultShort(&Serial); // Print complete received data in one line
@@ -75,6 +134,7 @@ void loop() {
     IrReceiver.resume(); // Enable receiving of the next value
     
   }
+  
 }
 
 void driveForward(){
@@ -137,13 +197,21 @@ void driveBack(){
 
 void KO(){
   Serial.println("K.O");
+  digitalWrite(8, HIGH); // Turn on LED
+  Serial.println("STOPPING");
+  //STOPPING
+  //Motor 1
+  digitalWrite(motor1pin1, LOW);
+  digitalWrite(motor1pin2, LOW);
+  //Motor 2
+  digitalWrite(motor2pin1, LOW);
+  digitalWrite(motor2pin2, LOW);
+  LEDToggle = 1;
 }
 
 void RESET(){
   Serial.println("RESET");
-  /*
   digitalWrite(8, LOW); // Turn off LED
-  digitalWrite(10, HIGH); //ENABLE bottom motor
-  digitalWrite(11, HIGH); //ENABLE top motor
-  */
+  LEDToggle = 0;
+  
 }
